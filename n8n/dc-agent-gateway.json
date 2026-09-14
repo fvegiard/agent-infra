@@ -1,0 +1,463 @@
+[
+  {
+    "id": "dcagentgw000001",
+    "name": "DC Autonomous Worker Gateway",
+    "active": true,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "agent-gateway",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "aaa00000-0000-4000-8000-000000000001",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          240,
+          300
+        ],
+        "webhookId": "dc-gateway-webhook-001"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a1",
+                "name": "_hdr",
+                "type": "string",
+                "value": "={{ ($json.headers && $json.headers['x-dc-key']) || '' }}"
+              },
+              {
+                "id": "a2",
+                "name": "_key",
+                "type": "string",
+                "value": "={{ $env.DC_WEBHOOK_KEY || '' }}"
+              },
+              {
+                "id": "a3",
+                "name": "_action",
+                "type": "string",
+                "value": "={{ ($json.body && $json.body.action) || '' }}"
+              },
+              {
+                "id": "a4",
+                "name": "_task",
+                "type": "string",
+                "value": "={{ ($json.body && $json.body.task) || '' }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "aaa00000-0000-4000-8000-000000000011",
+        "name": "Auth Fields",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          460,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "auth-check",
+                "leftValue": "={{ $json._hdr }}",
+                "rightValue": "={{ $json._key }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "aaa00000-0000-4000-8000-000000000002",
+        "name": "Auth Header Check",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          460,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ error: 'unauthorized' }) }}",
+          "responseCode": 401,
+          "options": {}
+        },
+        "id": "aaa00000-0000-4000-8000-000000000009",
+        "name": "Reject",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          680,
+          480
+        ]
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "conditions": [
+                    {
+                      "id": "route-agent",
+                      "leftValue": "={{ $json._action }}",
+                      "rightValue": "agent",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "agent"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "conditions": [
+                    {
+                      "id": "route-system-report",
+                      "leftValue": "={{ $json._action }}",
+                      "rightValue": "system-report",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "system-report"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "conditions": [
+                    {
+                      "id": "route-deploy-check",
+                      "leftValue": "={{ $json._action }}",
+                      "rightValue": "deploy-check",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "deploy-check"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "aaa00000-0000-4000-8000-000000000003",
+        "name": "Route Action",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          680,
+          240
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "http://127.0.0.1:18789/health",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ 'Bearer ' + $env.OPENCLAW_GATEWAY_TOKEN }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            },
+            "timeout": 5000
+          }
+        },
+        "id": "aaa00000-0000-4000-8000-000000000004",
+        "name": "OpenClaw Health",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          900,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ ok: true, agent_task: $json.body && $json.body.task || $json._task || null, openclaw: { status: $('OpenClaw Health').item.json.status || 'unknown', note: 'Long-running OpenClaw agent turns execute asynchronously. For a synchronous quick answer use action=system-report / deploy-check / rag.' } }) }}",
+          "options": {}
+        },
+        "id": "aaa00000-0000-4000-8000-000000000005",
+        "name": "Respond Agent Ack",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1120,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "http://127.0.0.1:5678/healthz",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            },
+            "timeout": 5000
+          }
+        },
+        "id": "aaa00000-0000-4000-8000-000000000006",
+        "name": "n8n Health",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          900,
+          240
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "http://127.0.0.1:11434/api/tags",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            },
+            "timeout": 5000
+          }
+        },
+        "id": "aaa00000-0000-4000-8000-000000000007",
+        "name": "Ollama Models",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1080,
+          240
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ ok: true, timestamp: $now.toISO(), n8n_health: $('n8n Health').item.json, ollama_models: ($('Ollama Models').item.json.models || []).map(m => m.name), cloudflared_tunnel: 'https://ranges-shift-deemed-trained.trycloudflare.com', services: { n8n: 'systemd user unit n8n.service', dc_remote: 'systemd user unit desktop-commander-remote.service', openclaw: 'systemd user unit openclaw-gateway.service', cloudflared: 'systemd user unit n8n-cloudflared.service' } }) }}",
+          "options": {}
+        },
+        "id": "aaa00000-0000-4000-8000-000000000008",
+        "name": "Respond Report",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1280,
+          240
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.github.com/repos/fvegiard/agent-infra/actions/runs?per_page=3",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            },
+            "timeout": 15000
+          }
+        },
+        "id": "aaa00000-0000-4000-8000-00000000000c",
+        "name": "GitHub Actions Status",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          900,
+          360
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ ok: true, repo: 'fvegiard/agent-infra', runs: (($json.body && $json.body.workflow_runs) || $json.workflow_runs || []).slice(0,3).map(r => ({ name: r.name, status: r.status, conclusion: r.conclusion, updated_at: r.updated_at, head_branch: r.head_branch, html_url: r.html_url })) }) }}",
+          "options": {}
+        },
+        "id": "aaa00000-0000-4000-8000-00000000000a",
+        "name": "Respond Deploy Check",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1120,
+          360
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Auth Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Auth Header Check": {
+        "main": [
+          [
+            {
+              "node": "Route Action",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reject",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Route Action": {
+        "main": [
+          [
+            {
+              "node": "OpenClaw Health",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "n8n Health",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "GitHub Actions Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "n8n Health": {
+        "main": [
+          [
+            {
+              "node": "Ollama Models",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ollama Models": {
+        "main": [
+          [
+            {
+              "node": "Respond Report",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GitHub Actions Status": {
+        "main": [
+          [
+            {
+              "node": "Respond Deploy Check",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Auth Fields": {
+        "main": [
+          [
+            {
+              "node": "Auth Header Check",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenClaw Health": {
+        "main": [
+          [
+            {
+              "node": "Respond Agent Ack",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "meta": {
+      "instanceId": "agent-infra-dc-automation"
+    },
+    "pinData": {},
+    "tags": []
+  }
+]

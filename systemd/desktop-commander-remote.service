@@ -1,0 +1,22 @@
+[Unit]
+Description=Desktop Commander Remote MCP device
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Pin to released version (matches GitHub v0.2.50)
+ExecStart=/home/linuxbrew/.linuxbrew/bin/npx -y @wonderwhy-er/desktop-commander@0.2.50 remote --disable-no-sleep
+Restart=always
+RestartSec=5
+Environment=PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/francis-v
+Environment=XDG_CONFIG_HOME=/home/francis-v/.config
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+WorkingDirectory=/home/francis-v
+StandardOutput=append:/home/francis-v/.desktop-commander-device/logs/remote.log
+StandardError=append:/home/francis-v/.desktop-commander-device/logs/remote.log
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,20 @@
+[Unit]
+Description=OpenClaw agent runner (HTTP surface for n8n invocation)
+Documentation=https://docs.openclaw.ai/cli/agent
+After=network-online.target openclaw-gateway.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/linuxbrew/.linuxbrew/opt/node/bin/node /home/francis-v/agent-infra/openclaw-runner/dist/index.js
+Restart=always
+RestartSec=5
+Environment=HOME=/home/francis-v
+Environment=OLLAMA_HOST=http://127.0.0.1:11434
+Environment=OLLAMA_API_KEY=ollama
+Environment=OPENCLAW_RUNNER_BIND=127.0.0.1
+Environment=OPENCLAW_RUNNER_PORT=7890
+WorkingDirectory=/home/francis-v/agent-infra/openclaw-runner
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,32 @@
+[Unit]
+Description=OpenClaw Gateway
+After=network-online.target
+Wants=network-online.target
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+[Service]
+ExecStart=/home/linuxbrew/.linuxbrew/opt/node/bin/node --max-old-space-size=15672 /home/francis-v/.local/share/openclaw-global/lib/node_modules/openclaw/dist/index.js gateway --port 18789
+Restart=always
+RestartSec=5
+RestartPreventExitStatus=78
+TimeoutStopSec=330
+TimeoutStartSec=30
+SuccessExitStatus=0 143
+OOMPolicy=continue
+KillMode=mixed
+Environment=HOME=/home/francis-v
+Environment=TMPDIR=/tmp
+Environment=PATH=/home/linuxbrew/.linuxbrew/opt/node/bin:/home/francis-v/.local/share/openclaw-global/bin:/usr/local/bin:/usr/bin:/bin:/home/francis-v/.local/bin:/home/francis-v/.npm-global/bin:/home/francis-v/bin:/home/francis-v/.nix-profile/bin
+Environment=NODE_OPTIONS=
+Environment=OLLAMA_HOST=http://127.0.0.1:11434
+Environment=OLLAMA_API_KEY=ollama
+Environment=OPENCLAW_GATEWAY_PORT=18789
+Environment=OPENCLAW_SYSTEMD_UNIT=openclaw-gateway.service
+Environment="OPENCLAW_WINDOWS_TASK_NAME=OpenClaw Gateway"
+Environment=OPENCLAW_WINDOWS_TASK_HIDDEN_LAUNCHER=1
+Environment=OPENCLAW_SERVICE_MARKER=openclaw
+Environment=OPENCLAW_SERVICE_KIND=gateway
+
+[Install]
+WantedBy=default.target

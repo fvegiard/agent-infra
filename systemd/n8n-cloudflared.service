@@ -1,0 +1,17 @@
+[Unit]
+Description=Cloudflare quick tunnel for n8n (public webhook exposure)
+Documentation=https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/
+After=network-online.target n8n.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/linuxbrew/.linuxbrew/bin/cloudflared tunnel --url http://127.0.0.1:5678 --no-autoupdate
+Restart=always
+RestartSec=5
+TimeoutStopSec=15
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
