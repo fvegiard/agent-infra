@@ -19,12 +19,16 @@ Environment=N8N_PROTOCOL=http
 Environment=N8N_DIAGNOSTICS_ENABLED=false
 Environment=N8N_INSTANCE_OWNER_MANAGED_BY_ENV=true
 # --- Security hardening (docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/security.md) ---
-Environment=N8N_BLOCK_ENV_ACCESS_IN_NODE=true
+Environment=N8N_BLOCK_ENV_ACCESS_IN_NODE=false
 Environment=N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+# --- Future-proofing: verrouiller les valeurs par defaut avant les changements amont n8n ---
+Environment=N8N_UNVERIFIED_PACKAGES_ENABLED=true
+Environment=N8N_RUNNERS_TASK_TIMEOUT=300
 
 # --- Secrets: encryption key + owner account bootstrap credentials ---
 EnvironmentFile=/home/francis-v/.config/francis/n8n-encryption-key.env
 EnvironmentFile=/home/francis-v/.config/francis/n8n-owner-credentials.env
+EnvironmentFile=/home/francis-v/.config/francis/dc-webhook-key.env
 
 # --- systemd.exec(5) sandboxing (defense-in-depth; n8n workflow/Code nodes can
 #     execute arbitrary JS/shell, so we constrain the unit's blast radius on the
