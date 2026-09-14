@@ -1,0 +1,12 @@
+{
+  "name": "chrome-cdp-launcher",
+  "private": true,
+  "type": "module",
+  "description": "Launches a dedicated headless Chrome pinned to a fixed CDP port using chrome-launcher (GoogleChrome/Lighthouse team). Supervised by the agent process manager.",
+  "scripts": {
+    "start": "node launch.mjs"
+  },
+  "dependencies": {
+    "chrome-launcher": "^1.2.1"
+  }
+}
